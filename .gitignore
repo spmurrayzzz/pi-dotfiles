@@ -1,0 +1,6 @@
+.DS_Store
+.pi/agent/auth.json
+.pi/agent/sessions/
+.pi/pi-acp/
+.pi/agent/extensions/voice/macos-transcribe
+*.bak
