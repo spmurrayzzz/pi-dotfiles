@@ -2,6 +2,16 @@
 
 Source-controlled pi configuration.
 
+## Contents
+
+- [`exa.ts`](.pi/agent/extensions/exa.ts): Exa web search and page content tools.
+- [`message-history.ts`](.pi/agent/extensions/message-history.ts): Up/down
+  prompt history from prior sessions.
+- [`voice/`](.pi/agent/extensions/voice/): macOS voice dictation commands and
+  shortcut support.
+- [`build-pi-extension`](.pi/agent/skills/build-pi-extension/SKILL.md):
+  guidance for building pi extensions.
+
 ## Install
 
 ```sh
