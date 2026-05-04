@@ -1,16 +1,160 @@
 import {
-	DynamicBorder,
 	SessionManager,
 	type ExtensionAPI,
 	type ExtensionCommandContext,
 	type SessionInfo,
+	type Theme,
+	type ThemeColor,
 } from "@mariozechner/pi-coding-agent";
 import {
-	Container,
-	type SelectItem,
-	SelectList,
-	Text,
+	type Component,
+	type KeybindingsManager,
+	truncateToWidth,
+	visibleWidth,
 } from "@mariozechner/pi-tui";
+
+type SessionSelectItem = {
+	value: string;
+	label: string;
+	description: string;
+};
+
+class SessionList implements Component {
+	private filtered: SessionSelectItem[];
+	private selectedIndex = 0;
+	private query = "";
+
+	constructor(
+		private items: SessionSelectItem[],
+		private maxVisible: number,
+		private theme: Theme,
+		private keybindings: KeybindingsManager,
+		private done: (value: string | null) => void,
+	) {
+		this.filtered = items;
+	}
+
+	invalidate() {}
+
+	render(width: number) {
+		const innerWidth = Math.max(1, width - 4);
+		const count = this.filtered.length;
+		const index = count === 0 ? 0 : this.selectedIndex + 1;
+		const page = Math.floor(this.selectedIndex / this.maxVisible) + 1;
+		const pages = Math.max(1, Math.ceil(count / this.maxVisible));
+		const start = Math.floor(this.selectedIndex / this.maxVisible) *
+			this.maxVisible;
+		const end = Math.min(start + this.maxVisible, count);
+		const lines = [
+			this.boxTop(width),
+			this.boxLine(
+				this.theme.fg("accent", this.theme.bold("Sessions")) +
+					this.theme.fg("dim", ` (${index}/${count}) page ${page}/${pages}`),
+				width,
+			),
+			this.boxLine(this.theme.fg("dim", `Search: ${this.query}`), width),
+		];
+
+		if (count === 0) {
+			lines.push(this.boxLine(
+				this.theme.fg("warning", "No matching sessions"),
+				width,
+			));
+		} else {
+			for (let i = start; i < end; i++) {
+				const item = this.filtered[i];
+				if (!item) continue;
+				const prefix = i === this.selectedIndex ? "→ " : "  ";
+				const title = truncateToWidth(item.label, Math.min(32, innerWidth), "");
+				const descWidth = Math.max(0, innerWidth - visibleWidth(title) - 4);
+				const desc = truncateToWidth(item.description, descWidth, "");
+				const color: ThemeColor = i === this.selectedIndex ? "accent" : "text";
+				lines.push(this.boxLine(
+					this.theme.fg(color, prefix + title + "  " + desc),
+					width,
+				));
+			}
+		}
+
+		for (let i = end - start; i < this.maxVisible; i++) {
+			lines.push(this.boxLine("", width));
+		}
+
+		const help = "↑↓ navigate • type search • enter resume • esc";
+		lines.push(this.boxLine(this.theme.fg("dim", help), width));
+		lines.push(this.boxBottom(width));
+		return lines;
+	}
+
+	handleInput(data: string) {
+		if (this.keybindings.matches(data, "tui.select.up")) {
+			this.move(-1);
+		} else if (this.keybindings.matches(data, "tui.select.down")) {
+			this.move(1);
+		} else if (this.keybindings.matches(data, "tui.select.pageUp")) {
+			this.move(-this.maxVisible);
+		} else if (this.keybindings.matches(data, "tui.select.pageDown")) {
+			this.move(this.maxVisible);
+		} else if (this.keybindings.matches(data, "tui.select.confirm")) {
+			this.done(this.filtered[this.selectedIndex]?.value ?? null);
+		} else if (this.keybindings.matches(data, "tui.select.cancel")) {
+			this.done(null);
+		} else if (
+			this.keybindings.matches(data, "tui.editor.deleteCharBackward")
+		) {
+			this.query = this.query.slice(0, -1);
+			this.applyFilter();
+		} else if (data.length === 1 && data >= " ") {
+			this.query += data;
+			this.applyFilter();
+		}
+	}
+
+	private move(delta: number) {
+		if (this.filtered.length === 0) return;
+		this.selectedIndex = Math.max(
+			0,
+			Math.min(this.selectedIndex + delta, this.filtered.length - 1),
+		);
+	}
+
+	private applyFilter() {
+		const query = this.query.toLowerCase();
+		this.filtered = this.items.filter((item) => {
+			return [item.label, item.description, item.value]
+				.join("\n")
+				.toLowerCase()
+				.includes(query);
+		});
+		this.selectedIndex = Math.min(this.selectedIndex, this.filtered.length - 1);
+		this.selectedIndex = Math.max(0, this.selectedIndex);
+	}
+
+	private boxTop(width: number) {
+		return this.theme.fg("accent", "╭" + "─".repeat(width - 2) + "╮");
+	}
+
+	private boxBottom(width: number) {
+		return this.theme.fg("accent", "╰" + "─".repeat(width - 2) + "╯");
+	}
+
+	private boxLine(text: string, width: number) {
+		const innerWidth = width - 4;
+		const content = truncateToWidth(text, innerWidth, "");
+		const padding = " ".repeat(Math.max(0, innerWidth - visibleWidth(content)));
+		return this.theme.fg("accent", "│ ") + content + padding +
+			this.theme.fg("accent", " │");
+	}
+}
+
+function safeText(text: string) {
+	return text
+		.replace(/\x1b\][^\x07]*(?:\x07|\x1b\\)/g, " ")
+		.replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, " ")
+		.replace(/[\x00-\x1f\x7f-\x9f]+/g, " ")
+		.replace(/\s+/g, " ")
+		.trim();
+}
 
 export default function sessionManagerExtension(pi: ExtensionAPI) {
 	async function getSessions(ctx: ExtensionCommandContext) {
@@ -29,7 +173,8 @@ export default function sessionManagerExtension(pi: ExtensionAPI) {
 
 	function title(session: SessionInfo, currentPath?: string) {
 		const prefix = session.path === currentPath ? "● " : "";
-		return prefix + (session.name || session.firstMessage || "(empty session)");
+		const name = session.name || session.firstMessage || "(empty session)";
+		return prefix + safeText(name);
 	}
 
 	function description(session: SessionInfo) {
@@ -38,7 +183,7 @@ export default function sessionManagerExtension(pi: ExtensionAPI) {
 			`${session.messageCount} messages`,
 		];
 		if (session.parentSessionPath) parts.push("fork");
-		return parts.join(" • ");
+		return safeText(parts.join(" • "));
 	}
 
 	async function switchToSession(path: string, ctx: ExtensionCommandContext) {
@@ -65,57 +210,30 @@ export default function sessionManagerExtension(pi: ExtensionAPI) {
 		}
 
 		const currentPath = ctx.sessionManager.getSessionFile();
-		const items: SelectItem[] = sessions.map((session) => ({
+		const items: SessionSelectItem[] = sessions.map((session) => ({
 			value: session.path,
 			label: title(session, currentPath),
 			description: description(session),
 		}));
 
 		const selected = await ctx.ui.custom<string | null>(
-			(tui, theme, _keybindings, done) => {
-				const container = new Container();
-				container.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
-				container.addChild(new Text(
-					theme.fg("accent", theme.bold("Sessions")),
-					1,
-					0,
-				));
-
-				const list = new SelectList(items, Math.min(items.length, 15), {
-					selectedPrefix: (s) => theme.fg("accent", s),
-					selectedText: (s) => theme.fg("accent", s),
-					description: (s) => theme.fg("muted", s),
-					scrollInfo: (s) => theme.fg("dim", s),
-					noMatch: (s) => theme.fg("warning", s),
-				});
-				list.onSelect = (item) => done(item.value);
-				list.onCancel = () => done(null);
-				container.addChild(list);
-
-				container.addChild(new Text(
-					theme.fg(
-						"dim",
-						"↑↓ navigate • type to search • enter resume • esc cancel",
-					),
-					1,
-					0,
-				));
-				container.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
-
-				return {
-					render(width: number) {
-						return container.render(width);
-					},
-					invalidate() {
-						container.invalidate();
-					},
-					handleInput(data: string) {
-						list.handleInput(data);
-						tui.requestRender();
-					},
-				};
+			(_tui, theme, keybindings, done) => new SessionList(
+				items,
+				10,
+				theme,
+				keybindings,
+				done,
+			),
+			{
+				overlay: true,
+				overlayOptions: {
+					anchor: "center",
+					width: "80%",
+					minWidth: 90,
+					maxHeight: "80%",
+					margin: 2,
+				},
 			},
-			{ overlay: true, overlayOptions: { width: "80%", maxHeight: "80%" } },
 		);
 
 		if (selected) await switchToSession(selected, ctx);
