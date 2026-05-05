@@ -11,8 +11,7 @@ repo, the exact claim/table/figure to reproduce, available compute, acceptable
 runtime/cost, and whether code changes or training runs are allowed.
 
 If the user only provides a paper link, ask which claim/table/figure matters,
-whether the goal is audit-only, eval-only, or full training, and what compute
-budget is allowed.
+whether the goal is audit-only, eval-only, full training, and allowed budget.
 
 Do not start expensive downloads, environment builds, training, or evals until
 the user approves the budget and target result.
@@ -26,8 +25,10 @@ Gather and pin the source artifacts:
 - Result: exact table/figure/metric, baseline, model variant, seed count.
 - Environment: Python/CUDA/framework versions, hardware, expected runtime.
 
-Prefer primary sources. Use web search for official repos, Papers with Code,
-leaderboards, errata, follow-up reproductions, and issue threads.
+Prefer primary sources. Use web search for official repos, leaderboards, errata,
+follow-up reproductions, and issue threads.
+Use `scripts/extract-paper-artifact.js <path-or-url>` to convert PDFs, HTML, or
+text artifacts into model-readable text before claim extraction.
 
 ## Claim extraction
 Before implementation, produce a compact reproduction brief:
@@ -54,8 +55,7 @@ minimal implementation plan instead of assuming official code is available.
 - Whether reported results have precise commands and matching config files.
 - Mismatches between paper equations, configs, defaults, metrics, and weights.
 
-Use the Papers with Code completeness lens: dependencies, training code,
-evaluation code, pretrained models, and result table with exact commands.
+Check dependencies, train/eval code, pretrained models, and exact commands.
 
 ## Execution strategy
 Reproduce in escalating cost order:
