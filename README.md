@@ -19,6 +19,9 @@ Source-controlled pi configuration.
 - [`deep-learning-researcher`](.pi/agent/skills/deep-learning-researcher/SKILL.md):
   deep learning research intern workflow for hypotheses, experiments,
   implementation, aggressive testing, and result analysis.
+- [`paper-reproducer`](.pi/agent/skills/paper-reproducer/SKILL.md):
+  skeptical ML paper reproduction workflow for claim extraction, repo audits,
+  executable validation, and conservative reproduction reports.
 
 ## Install
 
