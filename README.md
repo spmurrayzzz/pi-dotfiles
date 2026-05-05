@@ -5,6 +5,8 @@ Source-controlled pi configuration.
 ## Extensions
 
 - [`exa/`](.pi/agent/extensions/exa/): Exa web search and page content tools.
+- [`goal/`](.pi/agent/extensions/goal/): Codex-style `/goal` command for
+  long-running autonomous work with optional token budgets.
 - [`message-history/`](.pi/agent/extensions/message-history/): Up/down
   prompt history from prior sessions.
 - [`session-manager/`](.pi/agent/extensions/session-manager/): Session naming
