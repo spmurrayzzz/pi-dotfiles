@@ -16,6 +16,9 @@ Source-controlled pi configuration.
 
 - [`build-pi-extension`](.pi/agent/skills/build-pi-extension/SKILL.md):
   guidance for building pi extensions.
+- [`deep-learning-researcher`](.pi/agent/skills/deep-learning-researcher/SKILL.md):
+  deep learning research intern workflow for hypotheses, experiments,
+  implementation, aggressive testing, and result analysis.
 
 ## Install
 
