@@ -219,6 +219,8 @@ export default function goalExtension(pi: ExtensionAPI) {
 	const state: GoalState = { continuationSuppressed: false };
 	let lastCtx: ExtensionContext | undefined;
 	let queuedKind: "continuation" | "budget" | undefined;
+	let pendingGoalTurn: "continuation" | "budget" | undefined;
+	let goalQueueTimer: ReturnType<typeof setTimeout> | undefined;
 	let activeKind: "continuation" | "budget" | undefined;
 	let turnToolCalls = 0;
 
@@ -270,15 +272,45 @@ export default function goalExtension(pi: ExtensionAPI) {
 	}
 
 	function queueGoalTurn(kind: "continuation" | "budget") {
+		if (kind === "budget" || !pendingGoalTurn) pendingGoalTurn = kind;
+		tryQueueGoalTurn(20);
+	}
+
+	function tryQueueGoalTurn(attempts: number) {
+		if (goalQueueTimer) return;
+		const kind = pendingGoalTurn;
 		const goal = state.goal;
-		if (!goal || !lastCtx) return;
-		if (!lastCtx.isIdle() || lastCtx.hasPendingMessages()) return;
-		queuedKind = kind;
-		pi.sendMessage({
-			customType: kind === "budget" ? BUDGET_LIMIT_TYPE : CONTINUATION_TYPE,
-			content: kind === "budget" ? budgetLimitPrompt(goal) : continuationPrompt(goal),
-			display: false,
-		}, { deliverAs: "followUp", triggerTurn: true });
+		const ctx = lastCtx;
+		if (!kind || !goal || !ctx) {
+			pendingGoalTurn = undefined;
+			return;
+		}
+		if (kind === "continuation" && goal.status !== "active") {
+			pendingGoalTurn = undefined;
+			return;
+		}
+		if (kind === "budget" && goal.status !== "budget_limited") {
+			pendingGoalTurn = undefined;
+			return;
+		}
+		if (ctx.isIdle() && !ctx.hasPendingMessages()) {
+			pendingGoalTurn = undefined;
+			queuedKind = kind;
+			pi.sendMessage({
+				customType: kind === "budget" ? BUDGET_LIMIT_TYPE : CONTINUATION_TYPE,
+				content: kind === "budget" ? budgetLimitPrompt(goal) : continuationPrompt(goal),
+				display: false,
+			}, { deliverAs: "followUp", triggerTurn: true });
+			return;
+		}
+		if (attempts <= 0) {
+			pendingGoalTurn = undefined;
+			return;
+		}
+		goalQueueTimer = setTimeout(() => {
+			goalQueueTimer = undefined;
+			tryQueueGoalTurn(attempts - 1);
+		}, 250);
 	}
 
 	pi.on("session_start", async (_event, ctx) => {
@@ -297,6 +329,9 @@ export default function goalExtension(pi: ExtensionAPI) {
 	});
 
 	pi.on("session_shutdown", () => {
+		if (goalQueueTimer) clearTimeout(goalQueueTimer);
+		goalQueueTimer = undefined;
+		pendingGoalTurn = undefined;
 		if (state.goal?.status === "active") {
 			state.goal.timeUsedSeconds = currentTimeUsed(state.goal);
 			state.goal.activeSince = undefined;
