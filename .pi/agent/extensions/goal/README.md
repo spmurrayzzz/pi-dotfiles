@@ -37,8 +37,10 @@ Pauses, resumes, or clears the current goal.
 The extension exposes these tools to the agent:
 
 - `get_goal`: read the current goal and budget usage.
-- `create_goal`: create a goal only when explicitly requested.
 - `update_goal`: mark the goal `complete` only after the objective is achieved.
+
+Goals can only be started by the user with `/goal <objective>` by default. Set
+`PI_ENABLE_CREATE_GOAL=1` to expose the Codex-style `create_goal` model tool.
 
 ## Behavior
 

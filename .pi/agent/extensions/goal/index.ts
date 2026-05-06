@@ -28,6 +28,7 @@ type GoalState = {
 const STATE_TYPE = "goal-state";
 const CONTINUATION_TYPE = "goal-continuation";
 const BUDGET_LIMIT_TYPE = "goal-budget-limit";
+const ENABLE_CREATE_GOAL_TOOL = process.env.PI_ENABLE_CREATE_GOAL === "1";
 
 function isObject(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null;
@@ -369,37 +370,40 @@ export default function goalExtension(pi: ExtensionAPI) {
 		},
 	});
 
-	pi.registerTool({
-		name: "create_goal",
-		label: "Create Goal",
-		description: "Create a goal only when explicitly requested by the user or system/developer instructions; do not infer goals from ordinary tasks. Fails if a goal exists; use update_goal only for status.",
-		parameters: Type.Object({
-			objective: Type.String({ description: "The concrete objective to start pursuing." }),
-			token_budget: Type.Optional(Type.Number({ description: "Optional positive token budget." })),
-		}),
-		async execute(_id, params) {
-			if (params.token_budget !== undefined && params.token_budget <= 0) {
-				throw new Error("token_budget must be positive");
-			}
-			if (state.goal && state.goal.status !== "complete") {
-				throw new Error("cannot create a new goal because this thread already has a goal; use update_goal only when the existing goal is complete");
-			}
-			setGoal({
-				objective: params.objective,
-				status: "active",
-				tokenBudget: params.token_budget,
-				tokensUsed: 0,
-				timeUsedSeconds: 0,
-				createdAt: Date.now(),
-				updatedAt: Date.now(),
-				activeSince: Date.now(),
-			});
-			return {
-				content: [{ type: "text", text: goalResponse(state.goal) }],
-				details: { goal: state.goal },
-			};
-		},
-	});
+
+	if (ENABLE_CREATE_GOAL_TOOL) {
+		pi.registerTool({
+			name: "create_goal",
+			label: "Create Goal",
+			description: "Create a goal only when explicitly requested by the user or system/developer instructions; do not infer goals from ordinary tasks. Fails if a goal exists; use update_goal only for status.",
+			parameters: Type.Object({
+				objective: Type.String({ description: "The concrete objective to start pursuing." }),
+				token_budget: Type.Optional(Type.Number({ description: "Optional positive token budget." })),
+			}),
+			async execute(_id, params) {
+				if (params.token_budget !== undefined && params.token_budget <= 0) {
+					throw new Error("token_budget must be positive");
+				}
+				if (state.goal && state.goal.status !== "complete") {
+					throw new Error("cannot create a new goal because this thread already has a goal; use update_goal only when the existing goal is complete");
+				}
+				setGoal({
+					objective: params.objective,
+					status: "active",
+					tokenBudget: params.token_budget,
+					tokensUsed: 0,
+					timeUsedSeconds: 0,
+					createdAt: Date.now(),
+					updatedAt: Date.now(),
+					activeSince: Date.now(),
+				});
+				return {
+					content: [{ type: "text", text: goalResponse(state.goal) }],
+					details: { goal: state.goal },
+				};
+			},
+		});
+	}
 
 	pi.registerTool({
 		name: "update_goal",
