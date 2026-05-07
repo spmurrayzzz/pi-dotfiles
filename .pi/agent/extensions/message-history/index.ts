@@ -2,12 +2,12 @@ import {
 	CustomEditor,
 	SessionManager,
 	type ExtensionAPI,
-} from "@mariozechner/pi-coding-agent";
+} from "@earendil-works/pi-coding-agent";
 import type {
 	EditorTheme,
 	KeybindingsManager,
 	TUI,
-} from "@mariozechner/pi-tui";
+} from "@earendil-works/pi-tui";
 
 function messageText(content: unknown): string | undefined {
 	if (typeof content === "string") return content;

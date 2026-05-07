@@ -7,7 +7,10 @@ import {
 	spawnSync,
 	type ChildProcessWithoutNullStreams,
 } from "node:child_process";
-import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
+import type {
+	ExtensionAPI,
+	ExtensionContext,
+} from "@earendil-works/pi-coding-agent";
 
 type Backend = "native" | "openai";
 type InsertMode = "replace" | "append" | "prepend";

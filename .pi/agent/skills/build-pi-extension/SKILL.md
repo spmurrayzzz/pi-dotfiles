@@ -43,7 +43,7 @@ extensions can be hot-reloaded with `/reload`.
 Create a TypeScript module with a default factory:
 
 ```ts
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {
   pi.on("session_start", async (_event, ctx) => {
@@ -76,7 +76,7 @@ such as fetching provider models.
 - Prefer a single file unless dependencies or complexity justify a directory.
 - Import types and APIs at the top level. Do not use inline imports.
 - Use `typebox` schemas for tool parameters.
-- Use `StringEnum` from `@mariozechner/pi-ai` for string enums in tool
+- Use `StringEnum` from `@earendil-works/pi-ai` for string enums in tool
   schemas.
 - Check `ctx.hasUI` before relying on interactive UI behavior in print, JSON,
   or RPC modes.
