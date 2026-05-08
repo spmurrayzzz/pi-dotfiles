@@ -854,36 +854,59 @@ function renderHtml(active: ActiveRun, stopped: boolean, report: string): string
 <meta charset="utf-8">
 <title>${html(title)}</title>
 <style>
-body{font-family:ui-sans-serif,system-ui,sans-serif;margin:32px;background:#111;color:#eee}
-pre,code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:ui-sans-serif,system-ui,sans-serif;background:#111;color:#eee;overflow:hidden}
+a{color:inherit;text-decoration:none}pre,code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.layout{display:grid;grid-template-columns:320px minmax(0,1fr);height:100vh}
+.sidebar{border-right:1px solid #333;background:#151515;overflow:auto;padding:24px}
+.main{overflow:auto;padding:32px}
+h1{font-size:24px;margin:0 0 16px}h2{margin:0 0 12px}.section{margin:0 0 28px}
 .card{background:#1b1b1b;border:1px solid #333;border-radius:10px;padding:16px;margin:12px 0}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.sidebar .grid{grid-template-columns:1fr 1fr}
 .metric{font-size:24px;font-weight:700}.muted{color:#aaa}.ok{color:#7ee787}.bad{color:#ff7b72}
+.case-list{margin:16px 0}.case-name{color:#aaa;font-size:12px;font-weight:700;margin:16px 0 6px;text-transform:uppercase}.run-link{text-align:left;margin:4px 0}.run-link.active{border-color:#58a6ff;background:#1f2a37}.run-title{display:block}.run-meta{color:#aaa;display:block;font-size:12px;margin-top:2px}
 table{border-collapse:collapse;width:100%;margin:12px 0}th,td{border-bottom:1px solid #333;padding:8px;text-align:left;vertical-align:top}
-details{border:1px solid #333;border-radius:8px;margin:8px 0;padding:8px;background:#181818}summary{cursor:pointer}
+.panel{display:none}.panel.active{display:block}
 .block{white-space:pre-wrap;background:#0b0b0b;border:1px solid #333;border-radius:6px;padding:10px;overflow:auto}
-.raw{display:none}body.show-raw .raw{display:block}body.show-raw .transcript{display:none}
-button{background:#30363d;color:#eee;border:1px solid #555;border-radius:6px;padding:8px 10px;cursor:pointer}
+.report{max-height:55vh}.raw{display:none}body.show-raw .raw{display:block}body.show-raw .transcript{display:none}
+button{width:100%;background:#30363d;color:#eee;border:1px solid #555;border-radius:6px;padding:8px 10px;cursor:pointer}
+@media(max-width:760px){body{overflow:auto}.layout{display:block;height:auto}.sidebar,.main{overflow:visible}.sidebar{border-right:0;border-bottom:1px solid #333}}
 </style>
 <script>
 function toggleRaw(){document.body.classList.toggle('show-raw')}
+function selectPanel(id){
+	document.querySelectorAll('.panel').forEach((el)=>el.classList.remove('active'));
+	document.querySelectorAll('.run-link').forEach((el)=>el.classList.remove('active'));
+	document.getElementById(id)?.classList.add('active');
+	document.querySelector('[data-target="'+id+'"]')?.classList.add('active');
+	history.replaceState(null,'','#'+id);
+}
+window.addEventListener('DOMContentLoaded',()=>selectPanel(location.hash.slice(1)||'overview'));
 </script>
 </head>
 <body>
+<div class="layout">
+<aside class="sidebar">
 <h1>${html(title)}</h1>
-<button onclick="toggleRaw()">Toggle readable transcript / raw stdout</button>
 <div class="grid">
 ${metric("Runs", `${rows.length}/${active.total}`)}
-${metric("Pass rate", pct(rows.length - failed, rows.length))}
-${metric("Strict pass", pct(rows.length - strictFailed, rows.length))}
-${metric("Duration", duration(Date.now() - active.startedAt))}
+${metric("Pass", pct(rows.length - failed, rows.length))}
+${metric("Strict", pct(rows.length - strictFailed, rows.length))}
+${metric("Time", duration(Date.now() - active.startedAt))}
 </div>
-<div class="card"><pre>${html(report)}</pre></div>
+<button onclick="toggleRaw()">Toggle readable transcript / raw stdout</button>
+${renderSidebarLists(active)}
+</aside>
+<main class="main">
+<section class="panel" id="overview">
+<h2>Report summary</h2>
+<pre class="block report">${html(report)}</pre>
 ${renderHtmlSummary(active)}
-<h2>Failures</h2>
-${rows.filter((row) => !row.ok || !row.strictOk).map(renderRow).join("\n") || "<p class=\"muted\">No failures</p>"}
-<h2>All runs</h2>
-${rows.map(renderRow).join("\n")}
+</section>
+${rows.map((row, index) => renderRow(row, `run-${index}`)).join("\n")}
+</main>
+</div>
 </body>
 </html>`;
 }
@@ -893,9 +916,33 @@ function metric(label: string, value: string): string {
 		`<div class="metric">${html(value)}</div></div>`;
 }
 
+function renderSidebarLists(active: ActiveRun): string {
+	const names = [...new Set(active.rows.map((row) => row.case))];
+	return `<div class="case-list"><button class="run-link" ` +
+		`data-target="overview" onclick="selectPanel('overview')">` +
+		`<span class="run-title">Overview</span>` +
+		`<span class="run-meta">Summary and case breakdown</span></button>` +
+		names.map((name) => {
+			const rows = active.rows
+				.map((row, index) => [row, index] as const)
+				.filter(([row]) => row.case === name);
+			return `<div class="case-name">${html(name)}</div>` +
+				rows.map(([row, index]) => runLink(row, `run-${index}`)).join("");
+		}).join("") + `</div>`;
+}
+
+function runLink(row: RunResult, id: string): string {
+	const status = row.ok && row.strictOk ? "ok" : "bad";
+	return `<button class="run-link" data-target="${html(id)}" ` +
+		`onclick="selectPanel('${html(id)}')"><span class="run-title ${status}">` +
+		`${row.ok && row.strictOk ? "✓" : "✗"} Trial #${row.trial}</span>` +
+		`<span class="run-meta">${html(row.failureCategory)} · ` +
+		`${duration(row.durationMs)}</span></button>`;
+}
+
 function renderHtmlSummary(active: ActiveRun): string {
 	const names = [...new Set(active.rows.map((row) => row.case))];
-	return `<div class="card"><h2>By case</h2><table><thead><tr>` +
+	return `<div class="card"><h2>Case breakdown</h2><table><thead><tr>` +
 		`<th>Case</th><th>Runs</th><th>Pass</th><th>Strict</th><th>Avg</th>` +
 		`</tr></thead><tbody>${names.map((name) => {
 			const rows = active.rows.filter((row) => row.case === name);
@@ -908,12 +955,13 @@ function renderHtmlSummary(active: ActiveRun): string {
 		}).join("")}</tbody></table></div>`;
 }
 
-function renderRow(row: RunResult): string {
+function renderRow(row: RunResult, id: string): string {
 	const status = row.ok && row.strictOk ? "ok" : "bad";
-	return `<details><summary><span class="${status}">` +
+	return `<section class="panel" id="${html(id)}"><h2><span class="${status}">` +
 		`${row.ok && row.strictOk ? "✓" : "✗"}</span> ${html(row.case)} ` +
-		`#${row.trial} ${html(row.failureCategory)} ${duration(row.durationMs)}` +
-		`</summary><table><tbody>` +
+		`#${row.trial}</h2><table><tbody>` +
+		rowField("Status", row.failureCategory) +
+		rowField("Duration", duration(row.durationMs)) +
 		rowField("Expected tool", row.expectedTool) +
 		rowField("Validation", row.validation.reason) +
 		rowField("Exit", String(row.exitCode)) +
@@ -925,7 +973,7 @@ function renderRow(row: RunResult): string {
 		section("Final text", row.finalText) +
 		section("stderr", row.stderr) +
 		section("Raw stdout", row.stdout, "raw") +
-		`</details>`;
+		`</section>`;
 }
 
 function rowField(label: string, value: string): string {
