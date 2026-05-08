@@ -273,10 +273,10 @@ export default function goalExtension(pi: ExtensionAPI) {
 
 	function queueGoalTurn(kind: "continuation" | "budget") {
 		if (kind === "budget" || !pendingGoalTurn) pendingGoalTurn = kind;
-		tryQueueGoalTurn(20);
+		tryQueueGoalTurn();
 	}
 
-	function tryQueueGoalTurn(attempts: number) {
+	function tryQueueGoalTurn() {
 		if (goalQueueTimer) return;
 		const kind = pendingGoalTurn;
 		const goal = state.goal;
@@ -303,13 +303,9 @@ export default function goalExtension(pi: ExtensionAPI) {
 			}, { deliverAs: "followUp", triggerTurn: true });
 			return;
 		}
-		if (attempts <= 0) {
-			pendingGoalTurn = undefined;
-			return;
-		}
 		goalQueueTimer = setTimeout(() => {
 			goalQueueTimer = undefined;
-			tryQueueGoalTurn(attempts - 1);
+			tryQueueGoalTurn();
 		}, 250);
 	}
 
