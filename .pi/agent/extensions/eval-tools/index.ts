@@ -76,7 +76,7 @@ type CommandOptions = {
 	timeoutMs: number;
 	cases: string[];
 	concurrency: number;
-	exportPath?: string;
+	jsonPath?: string;
 	htmlPath?: string;
 	suitePath: string;
 	keepFailures: boolean;
@@ -339,7 +339,7 @@ async function finishEval(
 	stopped: boolean,
 ): Promise<string> {
 	const report = formatReport(active, stopped);
-	if (active.options.exportPath) await exportReport(active, stopped, report);
+	if (active.options.jsonPath) await exportJson(active, stopped, report);
 	if (active.options.htmlPath) await exportHtml(active, stopped, report);
 	return report;
 }
@@ -463,8 +463,8 @@ function parseOptions(args: string): CommandOptions {
 				arg,
 			);
 			options.overrides!.push("concurrency");
-		} else if (arg.startsWith("export=")) {
-			options.exportPath = arg.slice("export=".length);
+		} else if (arg.startsWith("json=")) {
+			options.jsonPath = arg.slice("json=".length);
 		} else if (arg.startsWith("html=")) {
 			options.htmlPath = arg.slice("html=".length);
 		} else if (arg.startsWith("suite=")) {
@@ -496,7 +496,7 @@ function applySuiteOptions(options: CommandOptions, suite: Suite): CommandOption
 	for (const key of options.overrides ?? []) {
 		Object.assign(merged, { [key]: options[key as keyof CommandOptions] });
 	}
-	merged.exportPath = options.exportPath;
+	merged.jsonPath = options.jsonPath;
 	merged.htmlPath = options.htmlPath;
 	merged.suitePath = options.suitePath;
 	merged.keepFailures = options.keepFailures;
@@ -787,8 +787,8 @@ function formatReport(active: ActiveRun, stopped: boolean): string {
 		for (const row of failures.slice(0, 20)) lines.push(formatFailure(row));
 		if (failures.length > 20) lines.push(`... ${failures.length - 20} more`);
 	}
-	if (active.options.exportPath) {
-		lines.push("", `JSON export: ${active.options.exportPath}`);
+	if (active.options.jsonPath) {
+		lines.push("", `JSON export: ${active.options.jsonPath}`);
 	}
 	if (active.options.htmlPath) {
 		lines.push(`HTML export: ${active.options.htmlPath}`);
@@ -814,12 +814,12 @@ function formatFailure(row: RunResult): string {
 	return lines.join("\n");
 }
 
-async function exportReport(
+async function exportJson(
 	active: ActiveRun,
 	stopped: boolean,
 	report: string,
 ): Promise<void> {
-	const file = resolve(process.cwd(), active.options.exportPath!);
+	const file = resolve(process.cwd(), active.options.jsonPath!);
 	await mkdir(dirname(file), { recursive: true });
 	await writeFile(file, JSON.stringify({
 		stopped,

@@ -23,7 +23,7 @@ Override options with `key=value` pairs:
 
 ```text
 /eval-tools smoke trials=5 concurrency=2 timeout=180000
-/eval-tools cases=read,write export=reports/tool-eval.json html=reports/tool-eval.html
+/eval-tools cases=read,write json=reports/tool-eval.json html=reports/tool-eval.html
 ```
 
 Compare two or more models:
@@ -39,7 +39,7 @@ Supported options:
 - `cases`: comma-separated case names.
 - `concurrency`: parallel eval workers.
 - `suite`: path to a custom TOML suite.
-- `export`: JSON report path.
+- `json`: JSON report path.
 - `html`: HTML report path.
 - `keepFailures=true`: keep failed run temp directories.
 
