@@ -4,6 +4,8 @@ Source-controlled pi configuration.
 
 ## Extensions
 
+- [`eval-tools/`](.pi/agent/extensions/eval-tools/): Native pi tool-call
+  eval commands for the active model or model comparisons.
 - [`exa/`](.pi/agent/extensions/exa/): Exa web search and page content tools.
 - [`goal/`](.pi/agent/extensions/goal/): Codex-style `/goal` command for
   long-running autonomous work with optional token budgets.

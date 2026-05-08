@@ -1,0 +1,230 @@
+version = 1
+name = "native-tool-basics"
+defaultCases = ["read", "write", "edit", "bash"]
+
+[defaults]
+trials = 1
+timeoutMs = 120000
+concurrency = 1
+
+[[presets]]
+name = "quick"
+trials = 1
+cases = ["read", "write", "edit", "bash"]
+
+[[presets]]
+name = "smoke"
+trials = 3
+cases = ["read", "write", "edit", "bash"]
+
+[[presets]]
+name = "edit-stress"
+trials = 25
+cases = [
+  "edit",
+  "edit_multi",
+  "edit_duplicate",
+  "edit_whitespace",
+  "edit_json",
+  "edit_ts_import",
+  "edit_nearby",
+  "edit_duplicate_expected_failure",
+]
+
+[[cases]]
+name = "read"
+tool = "read"
+prompt = "Use the read tool to read target.txt. Reply with only the token inside."
+
+[[cases.setup]]
+file = "target.txt"
+content = "PI_READ_TOKEN_72491\n"
+
+[[cases.expect]]
+answerContains = "PI_READ_TOKEN_72491"
+
+[[cases]]
+name = "write"
+tool = "write"
+prompt = "Use the write tool to create output.txt with exactly: PI_WRITE_TOKEN_18429"
+
+[[cases.expect]]
+file = "output.txt"
+equals = "PI_WRITE_TOKEN_18429"
+
+[[cases]]
+name = "edit"
+tool = "edit"
+tools = ["read", "edit"]
+prompt = "Use the edit tool to change beta to BETA in sample.txt."
+
+[[cases.setup]]
+file = "sample.txt"
+content = """
+alpha
+beta
+gamma
+"""
+
+[[cases.expect]]
+file = "sample.txt"
+equals = """
+alpha
+BETA
+gamma
+"""
+
+[[cases]]
+name = "edit_multi"
+tool = "edit"
+tools = ["read", "edit"]
+prompt = "Use edit to change red to RED and blue to BLUE in colors.txt."
+
+[[cases.setup]]
+file = "colors.txt"
+content = """
+red
+green
+blue
+"""
+
+[[cases.expect]]
+file = "colors.txt"
+equals = """
+RED
+green
+BLUE
+"""
+
+[[cases]]
+name = "edit_duplicate"
+tool = "edit"
+tools = ["read", "edit"]
+prompt = "Use edit to change only the second status: pending line to status: done in dup.txt."
+
+[[cases.setup]]
+file = "dup.txt"
+content = """
+task: one
+status: pending
+task: two
+status: pending
+"""
+
+[[cases.expect]]
+file = "dup.txt"
+equals = """
+task: one
+status: pending
+task: two
+status: done
+"""
+
+[[cases]]
+name = "edit_whitespace"
+tool = "edit"
+tools = ["read", "edit"]
+prompt = "Use edit to change the indented return value from 1 to 2."
+
+[[cases.setup]]
+file = "space.py"
+content = """
+def f():
+    return 1
+"""
+
+[[cases.expect]]
+file = "space.py"
+equals = """
+def f():
+    return 2
+"""
+
+[[cases]]
+name = "edit_json"
+tool = "edit"
+tools = ["read", "edit"]
+prompt = "Use edit to change enabled from false to true in config.json."
+
+[[cases.setup]]
+file = "config.json"
+content = """
+{
+  "enabled": false
+}
+"""
+
+[[cases.expect]]
+file = "config.json"
+equals = """
+{
+  "enabled": true
+}
+"""
+
+[[cases]]
+name = "edit_ts_import"
+tool = "edit"
+tools = ["read", "edit"]
+prompt = "Use edit to add readFile to the fs/promises import in app.ts."
+
+[[cases.setup]]
+file = "app.ts"
+content = "import { writeFile } from \"node:fs/promises\";\n"
+
+[[cases.expect]]
+file = "app.ts"
+equals = "import { readFile, writeFile } from \"node:fs/promises\";\n"
+
+[[cases]]
+name = "edit_nearby"
+tool = "edit"
+tools = ["read", "edit"]
+prompt = "Use edit to change only apple_count from 1 to 2 in fruit.txt."
+
+[[cases.setup]]
+file = "fruit.txt"
+content = """
+apple_count=1
+apple_total=1
+"""
+
+[[cases.expect]]
+file = "fruit.txt"
+equals = """
+apple_count=2
+apple_total=1
+"""
+
+[[cases]]
+name = "edit_duplicate_expected_failure"
+tool = "edit"
+tools = ["read", "edit"]
+expectedFailure = "tool_execution_error"
+prompt = "Use edit to replace status: pending with status: done in dupfail.txt."
+
+[[cases.setup]]
+file = "dupfail.txt"
+content = """
+task: one
+status: pending
+task: two
+status: pending
+"""
+
+[[cases.expect]]
+file = "dupfail.txt"
+equals = """
+task: one
+status: pending
+task: two
+status: pending
+"""
+
+[[cases]]
+name = "bash"
+tool = "bash"
+prompt = "Use the bash tool to print exactly BASH-TOKEN-93517. Reply with only that token."
+
+[[cases.expect]]
+answerContains = "BASH-TOKEN-93517"
