@@ -3,6 +3,9 @@
 Runs native pi tool-call eval suites against the current model or multiple
 models.
 
+<img width="1501" height="822" alt="image" src="https://github.com/user-attachments/assets/7994c268-2c2e-4fc4-93f9-32bd1ec74f0d" />
+
+
 ## Usage
 
 Run the default suite against the active model:
