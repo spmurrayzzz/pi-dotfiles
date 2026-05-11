@@ -13,6 +13,8 @@ Source-controlled pi configuration.
   prompt history from prior sessions.
 - [`session-manager/`](.pi/agent/extensions/session-manager/): Session naming
   and management commands.
+- [`tps/`](.pi/agent/extensions/tps/): Token throughput notification after
+  each agent turn.
 - [`voice/`](.pi/agent/extensions/voice/): macOS voice dictation commands and
   shortcut support.
 
