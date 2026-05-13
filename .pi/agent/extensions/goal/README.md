@@ -19,10 +19,25 @@ current turn finishes, then the extension marks the goal `budget_limited` and
 queues one wrap-up turn.
 
 ```text
+/goal --limit 5 <objective>
+```
+
+Starts a goal with a hard cap on automatic continuation turns. The initial goal
+turn does not count against the limit. A limit of `0` disables the cap.
+
+```text
+/goal --tokens 80K --limit 5 <objective>
+```
+
+Combines token and continuation budgets. Flags can appear in either order before
+the objective.
+
+```text
 /goal
 ```
 
-Shows the current goal, status, elapsed time, and token usage.
+Shows the current goal, status, elapsed time, token usage, and continuation
+usage.
 
 ```text
 /goal pause
@@ -52,13 +67,16 @@ all requirements are satisfied.
 If a continuation turn makes no tool calls, automatic continuation is suppressed
 so the agent does not spin indefinitely.
 
+If the continuation limit is reached, the extension marks the goal
+`continuation_limited` and stops queueing automatic continuations.
+
 Goal state is persisted in the pi session via `appendEntry`, so it survives
 reloads and resumes.
 
 ## Examples
 
 ```text
-/goal --tokens 20K create /tmp/pi-goal-test.txt containing success, verify it exists, then mark complete
+/goal --tokens 20K --limit 3 create /tmp/pi-goal-test.txt containing success, verify it exists, then mark complete
 ```
 
 ```text
