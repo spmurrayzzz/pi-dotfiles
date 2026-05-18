@@ -4,3 +4,4 @@
 .pi/pi-acp/
 .pi/agent/extensions/voice/macos-transcribe
 *.bak
+dump/
