@@ -4,6 +4,8 @@ Source-controlled pi configuration.
 
 ## Extensions
 
+- [`agentic-eval/`](.pi/agent/extensions/agentic-eval/): Run blind
+  child-agent evals against reviewed specs generated from committed changes.
 - [`eval-tools/`](.pi/agent/extensions/eval-tools/): Native pi tool-call
   eval commands for the active model or model comparisons.
 - [`exa/`](.pi/agent/extensions/exa/): Exa web search and page content tools.
