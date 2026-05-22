@@ -24,6 +24,9 @@ Source-controlled pi configuration.
 
 - [`build-pi-extension`](.pi/agent/skills/build-pi-extension/SKILL.md):
   guidance for building pi extensions.
+- [`code-review`](.pi/agent/skills/code-review/SKILL.md):
+  review workflow for proposed code changes, with actionable findings and
+  priority-tagged inline comments.
 - [`deep-learning-researcher`](.pi/agent/skills/deep-learning-researcher/SKILL.md):
   deep learning research intern workflow for hypotheses, experiments,
   implementation, aggressive testing, and result analysis.
