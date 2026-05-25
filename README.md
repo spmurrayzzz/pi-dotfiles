@@ -36,6 +36,9 @@ Source-controlled pi configuration.
 - [`paper-reproducer`](.pi/agent/skills/paper-reproducer/SKILL.md):
   skeptical ML paper reproduction workflow for claim extraction, repo audits,
   executable validation, and conservative reproduction reports.
+- [`pmg-config`](.pi/agent/skills/pmg-config/SKILL.md):
+  SafeDep PMG configuration guidance for trusted package exceptions, blocked
+  installs, and malware advisory false positives.
 
 ## Install
 
