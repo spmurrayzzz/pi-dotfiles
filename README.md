@@ -13,6 +13,8 @@ Source-controlled pi configuration.
   long-running autonomous work with optional token budgets.
 - [`message-history/`](.pi/agent/extensions/message-history/): Up/down
   prompt history from prior sessions.
+- [`read-skill/`](.pi/agent/extensions/read-skill/): Tool for reading full
+  skill files without offset or limit arguments.
 - [`session-manager/`](.pi/agent/extensions/session-manager/): Session naming
   and management commands.
 - [`tps/`](.pi/agent/extensions/tps/): Token throughput notification after
