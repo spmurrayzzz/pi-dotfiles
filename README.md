@@ -33,6 +33,9 @@ Source-controlled pi configuration.
 - [`ideation`](.pi/agent/skills/ideation/SKILL.md):
   concise pre-build alignment checks for vague goals, hidden decisions,
   assumptions, design choices, disappointment risks, and validation slices.
+- [`modularize`](.pi/agent/skills/modularize/SKILL.md):
+  workflow for splitting large files or shallow modules into cohesive modules
+  while preserving behavior and public entry points.
 - [`paper-reproducer`](.pi/agent/skills/paper-reproducer/SKILL.md):
   skeptical ML paper reproduction workflow for claim extraction, repo audits,
   executable validation, and conservative reproduction reports.
