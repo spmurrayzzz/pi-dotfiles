@@ -44,6 +44,9 @@ Source-controlled pi configuration.
 - [`pmg-config`](.pi/agent/skills/pmg-config/SKILL.md):
   SafeDep PMG configuration guidance for trusted package exceptions, blocked
   installs, and malware advisory false positives.
+- [`show-me`](.pi/agent/skills/show-me/SKILL.md):
+  visual explanations with concise diagrams, code-shape sketches, and focused
+  HTML artifacts.
 
 ## Install
 
