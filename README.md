@@ -45,6 +45,9 @@ Source-controlled pi configuration.
 - [`show-me`](.pi/agent/skills/show-me/SKILL.md):
   visual explanations with concise diagrams, code-shape sketches, and focused
   HTML artifacts.
+- [`testbench`](.pi/agent/skills/testbench/README.md):
+  manual-only evaluation workflows using pi in isolated QEMU guests, with
+  reusable cases, deterministic checks, and recorded results.
 
 ## Install
 

@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "name": "file-task",
+  "mode": "sandbox",
+  "cases": [
+    {
+      "id": "sort-program",
+      "files": {
+        "input.json": "[9,2,5,1]\n",
+        "sort.mjs": "import { readFileSync, writeFileSync } from 'node:fs';\nconst values = JSON.parse(readFileSync('input.json', 'utf8')).sort((a, b) => a - b);\nwriteFileSync('sorted.json', JSON.stringify(values) + '\\n');\nconsole.log(values.length);\n"
+      },
+      "command": ["node", "sort.mjs"],
+      "checks": [
+        {"path": "/command/exitCode", "op": "equals", "value": 0},
+        {"path": "/command/stdout", "op": "equals", "value": "4\n"},
+        {"path": "/files/sorted.json", "op": "equals", "value": "[1,2,5,9]\n"},
+        {"path": "/files/input.json", "op": "equals", "value": "[9,2,5,1]\n"}
+      ]
+    },
+    {
+      "id": "sort-agent",
+      "files": {"input.json": "[9,2,5,1]\n"},
+      "prompt": "Read input.json and sort its numbers in ascending order. Write sorted.json as a compact JSON array with no spaces, followed by one newline. Do not change input.json.",
+      "checks": [
+        {"path": "/files/sorted.json", "op": "equals", "value": "[1,2,5,9]\n"},
+        {"path": "/files/input.json", "op": "equals", "value": "[9,2,5,1]\n"}
+      ]
+    }
+  ]
+}
