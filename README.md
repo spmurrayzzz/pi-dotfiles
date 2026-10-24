@@ -24,6 +24,8 @@ Source-controlled pi configuration.
 
 - [`build-pi-extension`](.pi/agent/skills/build-pi-extension/SKILL.md):
   guidance for building pi extensions.
+- [`commit`](.pi/agent/skills/commit/SKILL.md):
+  commit changes using conventional commit syntax.
 - [`code-review`](.pi/agent/skills/code-review/SKILL.md):
   review workflow for proposed code changes, with actionable findings and
   priority-tagged inline comments.
